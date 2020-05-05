@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"time"
@@ -18,27 +17,29 @@ type target struct {
 	data   string
 }
 
+// check
+func check(e error) {
+	if e != nil {
+		panic(e)
+	}
+}
+
 // GetIP handler method
 func GetIP(c echo.Context) error {
-	timestamp := time.Now().UTC()
+	// timestamp
+	timestamp := time.Now().String()
 	// real ip
-	ip := c.RealIP()
+	ip := string(c.RealIP())
 	// client ip
-	client := c.Request().RemoteAddr
+	client := string(c.Request().RemoteAddr)
+	// each visitor
+	visitor := fmt.Sprintf("ip: %s", ip) + " | " + fmt.Sprintf("client: %s ", client) + " - " + timestamp + "\n"
 	// output file
-	file, err := os.OpenFile("log/ip.log", os.O_CREATE|os.O_APPEND, 0777)
-	if err != nil {
-		panic(err)
-	}
-
-	// logging
-	// log.SetOutput(file)
-	logger := log.New(file, "prefix", log.LstdFlags)
-	fmt.Println(&logger)
-	logger.Printf("Real ip %s", ip)
-	logger.Printf("Client ip %s", client)
-	logger.Printf("Time %s", timestamp)
-	defer file.Close()
+	file, err := os.Create("/tmp/ip.log")
+	// uh oh
+	check(err)
+	// write to file
+	file.WriteString(visitor)
 	// redirect to Google
 	return c.Redirect(http.StatusPermanentRedirect, "https://google.com")
 
